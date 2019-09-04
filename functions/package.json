@@ -13,11 +13,14 @@
     "node": "8"
   },
   "dependencies": {
+    "@google-cloud/storage": "^3.2.1",
     "axios": "^0.19.0",
     "camelcase": "^5.3.1",
     "firebase-admin": "^8.0.0",
     "firebase-functions": "^3.1.0",
+    "fs-extra": "^8.1.0",
     "glob": "^7.1.4",
+    "mkdirp-promise": "^5.0.1",
     "sharp": "^0.23.0",
     "zingchart": "^2.8.7"
   },
