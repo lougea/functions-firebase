@@ -6,16 +6,18 @@ const sharp = require('sharp')
 const {Storage} = require('@google-cloud/storage');
 const gcs = new Storage()
 
-// const admin = require('firebase-admin');
-// admin.initializeApp();
 
 exports = module.exports = functions.storage.object().onFinalize(async (object) => {
   const bucket = gcs.bucket(object.bucket)
+    // console.log(bucket)
   const filePath = object.name
+    // console.log(filePath)
   const fileName = filePath.split('/').pop()
+    // console.log(fileName)
   const bucketDir = path.dirname(filePath)
-
+    //  console.log(bucketDir)
   const workingDir = path.join(os.tmpdir(), 'thumbs')
+    // console.log(workingDir)
   const tmpFilePath = path.join(workingDir, 'source.png')
 
   if(fileName.includes('thumb@') || !object.contentType.includes('image') ){
@@ -28,7 +30,7 @@ exports = module.exports = functions.storage.object().onFinalize(async (object) 
     destination: tmpFilePath
   })
 
-  const sizes =[64, 128, 256]
+  const sizes =[64,120]
   const uploadPromises = sizes.map(async size => {
     const thumbName = `thumb@${size}_${fileName}`
     const thumbPath = path.join(workingDir, thumbName)
