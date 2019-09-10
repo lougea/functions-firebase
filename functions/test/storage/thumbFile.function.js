@@ -3,28 +3,29 @@ const fse = require('fs-extra')
 const path = require('path');
 const os = require('os');
 const sharp = require('sharp')
-const {Storage} = require('@google-cloud/storage');
-const gcs = new Storage()
+const admin = require('firebase-admin');
+const DB = admin.firestore()
+const storage = admin.storage()
+
+const CDN_URL = 
+'https://storage.cloud.google.com/tappable-louise.appspot.com/'
 
 
 exports = module.exports = functions.storage.object().onFinalize(async (object) => {
-  const bucket = gcs.bucket(object.bucket)
-    // console.log(bucket)
+  const bucket = storage.bucket(object.bucket)
   const filePath = object.name
-    // console.log(filePath)
   const fileName = filePath.split('/').pop()
-    // console.log(fileName)
   const bucketDir = path.dirname(filePath)
-    //  console.log(bucketDir)
   const workingDir = path.join(os.tmpdir(), 'thumbs')
-    // console.log(workingDir)
-  const tmpFilePath = path.join(workingDir, 'source.png')
+  const tmpFilePath = path.join(workingDir, fileName)
+
+  const uid = filePath.split('/')[1]
+
 
   if(fileName.includes('thumb@') || !object.contentType.includes('image') ){
     console.log('end function')
     return false
   }
-
   await fse.ensureDir(workingDir)
   await bucket.file(filePath).download({
     destination: tmpFilePath
@@ -40,8 +41,26 @@ exports = module.exports = functions.storage.object().onFinalize(async (object) 
     return bucket.upload(thumbPath, {
       destination: path.join(bucketDir, thumbName)
     });
+  
   });
-  await Promise.all(uploadPromises)
+  const res = await Promise.all(uploadPromises)
+  // File path Url - @64 @120
+  const filePath64 = res[0][0].name
+  const filePath120 = res[1][0].name
+ 
+  // Url @64 @120
+  const url_64= `${CDN_URL}${filePath64}`
+  const url_120= `${CDN_URL}${filePath120}`
+ 
+  // Update firestore with url @64 @120
+  await DB.collection('users')
+  .doc(uid)
+  .update({
+    Url64: url_64,
+    Url120: url_120
+  })
+
+  // Delete temp dir
   return fse.remove(workingDir)
   })
  
